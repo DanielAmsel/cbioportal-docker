@@ -21,23 +21,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& ln -s /usr/share/java/mysql-connector-java.jar "$CATALINA_HOME"/lib/ \
 	&& rm -rf $CATALINA_HOME/webapps/*m* 
-	
 
-# fetch the cBioPortal sources and version control metadata
+# include Maven configs to fetch additional Java dependencies listed there
 ENV PORTAL_HOME=/cbioportal
-RUN git clone --depth 1 -b v1.11.3 'https://github.com/cBioPortal/cbioportal.git' $PORTAL_HOME
+COPY pom.xml                                     $PORTAL_HOME/
 WORKDIR $PORTAL_HOME
+COPY business/pom.xml                            business/
+COPY core/pom.xml                                core/
+COPY db-scripts/pom.xml                          db-scripts/
+COPY model/pom.xml                               model/
+COPY persistence/pom.xml                         persistence/
+COPY persistence/persistence-api/pom.xml         persistence/persistence-api/
+COPY persistence/persistence-mybatis/pom.xml     persistence/persistence-mybatis/
+COPY portal/pom.xml                              portal/
+COPY scripts/pom.xml                             scripts/
+COPY security/pom.xml                            security/
+COPY security/security-spring/pom.xml            security/security-spring/
+COPY service/pom.xml                             service/
+COPY web/pom.xml                                 web/
+RUN mvn dependency:go-offline --fail-never
 
-#RUN git fetch --depth 1 https://github.com/thehyve/cbioportal.git my_development_branch \
-#       && git checkout commit_hash_in_branch
-
-# add buildtime configuration
-COPY ./portal.properties src/main/resources/portal.properties
-COPY ./log4j.properties src/main/resources/log4j.properties
+# include the rest of the cBioPortal sources
+COPY . $PORTAL_HOME
 
 # install default config files, build and install, placing the scripts jar back
 # in the target folder where import scripts expect it after cleanup
-RUN mvn -DskipTests clean package \
+RUN mv ./portal.properties src/main/resources/portal.properties \
+	&& mv ./log4j.properties src/main/resources/log4j.properties \
+	&& mvn -DskipTests clean package \
 	&& mv portal/target/cbioportal-*.war $CATALINA_HOME/webapps/cbioportal.war \
 	&& mv scripts/target/scripts-*.jar /root/ \
 	&& mvn clean \
@@ -45,10 +56,8 @@ RUN mvn -DskipTests clean package \
 	&& mv /root/scripts-*.jar scripts/target/
 
 # add runtime configuration
-COPY ./catalina_server.xml.patch /root/
-RUN patch $CATALINA_HOME/conf/server.xml </root/catalina_server.xml.patch
-COPY ./catalina_context.xml.patch /root/
-RUN patch $CATALINA_HOME/conf/context.xml </root/catalina_context.xml.patch
+RUN patch $CATALINA_HOME/conf/server.xml <catalina_server.xml.patch
+RUN patch $CATALINA_HOME/conf/context.xml <catalina_context.xml.patch
 
 # add importer scripts to PATH for easy running in containers
 RUN find $PWD/core/src/main/scripts/ -type f -executable \! -name '*.pl'  -print0 | xargs -0 -- ln -st /usr/local/bin
