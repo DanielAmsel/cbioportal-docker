@@ -20,12 +20,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		python-requests \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& ln -s /usr/share/java/mysql-connector-java.jar "$CATALINA_HOME"/lib/ \
-	&& rm -rf $CATALINA_HOME/webapps/*m* 
-	
+	&& rm -rf $CATALINA_HOME/webapps/*m*
+
 
 # fetch the cBioPortal sources and version control metadata
 ENV PORTAL_HOME=/cbioportal
-RUN git clone --depth 1 -b v1.11.3 'https://github.com/cBioPortal/cbioportal.git' $PORTAL_HOME
+# Switch to ESAD custom template
+RUN git clone --depth 1 -b esad-template 'https://github.com/MRC-CU/cbioportal-mrc-cu-esad.git' $PORTAL_HOME
+
 WORKDIR $PORTAL_HOME
 
 #RUN git fetch --depth 1 https://github.com/thehyve/cbioportal.git my_development_branch \
