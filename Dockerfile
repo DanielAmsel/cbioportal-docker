@@ -20,8 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		python-requests \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& ln -s /usr/share/java/mysql-connector-java.jar "$CATALINA_HOME"/lib/ \
-	&& rm -rf $CATALINA_HOME/webapps/*m*
-
+        && rm -rf $CATALINA_HOME/webapps/*
 
 # fetch the cBioPortal sources and version control metadata
 ENV PORTAL_HOME=/cbioportal
@@ -37,10 +36,16 @@ WORKDIR $PORTAL_HOME
 COPY ./portal.properties src/main/resources/portal.properties
 COPY ./log4j.properties src/main/resources/log4j.properties
 
+# add SAML configuration keys
+# COPY ./saml/samlKeystore.jks portal/src/main/resources/samlKeystore.jks
+# COPY ./saml/client-tailored-saml-idp-metadata.xml portal/src/main/resources/client-tailored-saml-idp-metadata.xml
+
 # install default config files, build and install, placing the scripts jar back
 # in the target folder where import scripts expect it after cleanup
 RUN mvn -DskipTests clean package \
-	&& mv portal/target/cbioportal-*.war $CATALINA_HOME/webapps/cbioportal.war \
+#	&& mv portal/target/cbioportal-*.war $CATALINA_HOME/webapps/cbioportal.war \
+# ROOT application
+        && mv portal/target/cbioportal-*.war $CATALINA_HOME/webapps/ROOT.war \
 	&& mv scripts/target/scripts-*.jar /root/ \
 	&& mvn clean \
 	&& mkdir scripts/target/ \
