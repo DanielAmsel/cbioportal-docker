@@ -4,7 +4,7 @@
 # version 3, or (at your option) any later version.
 #
 
-FROM tomcat:8-jre8
+FROM tomcat:9-jre8
 MAINTAINER Fedde Schaeffer <fedde@thehyve.nl>
 
 # install build and runtime dependencies and configure Tomcat for production
