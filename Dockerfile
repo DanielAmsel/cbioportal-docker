@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # fetch the cBioPortal sources and version control metadata
 ENV PORTAL_HOME=/cbioportal
 # Switch to ESAD custom template
-RUN git clone --depth 1 -b esad-template 'https://github.com/MRC-CU/cbioportal-mrc-cu-esad.git' $PORTAL_HOME
+RUN git clone --depth 1 -b occams_oct2018 'https://github.com/MRC-CU/cbioportal-mrc-cu-esad.git' $PORTAL_HOME
 
 WORKDIR $PORTAL_HOME
 
